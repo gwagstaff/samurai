@@ -1,0 +1,59 @@
+version: "3.8"
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  rabbit-cache:
+      driver: local
+  redis-cache:
+      driver: local
+
+services:
+  rabbit:
+    image: "rabbitmq:3-management"
+    networks:
+      - backend
+    ports:
+      - "5672:5672"
+    volumes:
+      - rabbit-cache:/var/lib/rabbitmq/data
+
+  redis:
+    image: "redis:7"
+    command: "redis-server --save 60 1 --loglevel notice"
+    networks:
+      - backend
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-cache:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      target: samurai-api
+    networks:
+      - backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./samurai/:/home/app/samurai/
+    depends_on:
+      - redis
+      - rabbit
+
+  worker:
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      target: samurai-worker
+    networks:
+      - backend
+    volumes:
+      - ./samurai/:/home/app/samurai/
+    depends_on:
+      - redis
+      - rabbit
