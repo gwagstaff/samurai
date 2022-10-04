@@ -10,7 +10,7 @@ worker = samurai_worker.create_worker()
 
 @task_router.get("/{word}")
 async def root(word: str, background_task: BackgroundTasks):
-    task_name = "samurai.samurai_worker.samurai.test_celery"
+    task_name = "samurai.samurai_worker.units.tasks.test_celery"
 
     task = worker.send_task(task_name, args=[word])
     print(task)
